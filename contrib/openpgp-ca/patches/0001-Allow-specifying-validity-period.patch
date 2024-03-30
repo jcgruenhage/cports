@@ -1,0 +1,146 @@
+From 8f15e94ac69e46821976ffd84811c907ad910c54 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jan=20Christian=20Gr=C3=BCnhage?=
+ <jan.christian@gruenhage.xyz>
+Date: Tue, 18 Jul 2023 10:58:11 +0200
+Subject: [PATCH] Allow specifying validity period
+
+---
+ Cargo.lock                 |  7 +++++++
+ openpgp-ca-bin/Cargo.toml  |  1 +
+ openpgp-ca-bin/src/bin.rs  |  3 ++-
+ openpgp-ca-bin/src/cli.rs  | 10 ++++++++++
+ openpgp-ca-lib/src/cert.rs |  1 +
+ openpgp-ca-lib/src/pgp.rs  |  6 ++++++
+ 6 files changed, 27 insertions(+), 1 deletion(-)
+
+diff --git a/Cargo.lock b/Cargo.lock
+index ff52da5..fe4475f 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -1100,6 +1100,12 @@ version = "1.0.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+ 
++[[package]]
++name = "humantime"
++version = "2.1.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
++
+ [[package]]
+ name = "hyper"
+ version = "0.14.30"
+@@ -1794,6 +1800,7 @@ version = "0.14.0"
+ dependencies = [
+  "anyhow",
+  "clap",
++ "humantime",
+  "lazy_static",
+  "openpgp-ca-lib",
+  "rpassword",
+diff --git a/openpgp-ca-bin/Cargo.toml b/openpgp-ca-bin/Cargo.toml
+index 0c014b6..be660be 100644
+--- a/openpgp-ca-bin/Cargo.toml
++++ b/openpgp-ca-bin/Cargo.toml
+@@ -23,5 +23,6 @@ clap = { version = "4", features = ["derive"] }
+ lazy_static = "1"
+ anyhow = "1.0"
+ rpassword = "7"
++humantime = "2.1.0"
+ 
+ openpgp-ca-lib = { path = "../openpgp-ca-lib", version = "0.14" }
+diff --git a/openpgp-ca-bin/src/bin.rs b/openpgp-ca-bin/src/bin.rs
+index 3172a8a..c789afd 100644
+--- a/openpgp-ca-bin/src/bin.rs
++++ b/openpgp-ca-bin/src/bin.rs
+@@ -229,6 +229,7 @@ fn main() -> Result<()> {
+             cli::UserCommand::Add {
+                 email,
+                 name,
++                validity_days,
+                 minimal,
+                 password_file,
+                 cipher_suite,
+@@ -243,7 +244,7 @@ fn main() -> Result<()> {
+                 ca.user_new(
+                     name.as_deref(),
+                     &emails[..],
+-                    None,
++                    validity_days,
+                     true,
+                     password_file,
+                     minimal,
+diff --git a/openpgp-ca-bin/src/cli.rs b/openpgp-ca-bin/src/cli.rs
+index bd9e50e..efc4d33 100644
+--- a/openpgp-ca-bin/src/cli.rs
++++ b/openpgp-ca-bin/src/cli.rs
+@@ -235,6 +235,13 @@ pub enum CaCommand {
+     },
+ }
+ 
++fn duration_parser(s: &str) -> Result<u64, String> {
++    match humantime::parse_duration(s) {
++        Ok(duration) => Ok(duration.as_secs() / (60*60*24)),
++        Err(error) => Err(error.to_string()),
++    }
++}
++
+ #[derive(Subcommand)]
+ pub enum UserCommand {
+     /// Add User (create new Key-Pair)
+@@ -251,6 +258,9 @@ pub enum UserCommand {
+         #[clap(short = 'n', long = "name", help = "Descriptive User Name")]
+         name: Option<String>,
+ 
++        #[clap(short = 'v', long = "validity", help = "Validity Period", value_parser = duration_parser)]
++        validity_days: Option<u64>,
++
+         #[clap(
+             short = 'm',
+             long = "minimal",
+diff --git a/openpgp-ca-lib/src/cert.rs b/openpgp-ca-lib/src/cert.rs
+index 3af6194..f7cd219 100644
+--- a/openpgp-ca-lib/src/cert.rs
++++ b/openpgp-ca-lib/src/cert.rs
+@@ -37,6 +37,7 @@ pub fn user_new(
+     let (user_key, user_revoc, pass) = pgp::make_user_cert(
+         emails,
+         name,
++        duration_days,
+         password,
+         password_file,
+         cipher_suite,
+diff --git a/openpgp-ca-lib/src/pgp.rs b/openpgp-ca-lib/src/pgp.rs
+index ef63b39..299dc69 100644
+--- a/openpgp-ca-lib/src/pgp.rs
++++ b/openpgp-ca-lib/src/pgp.rs
+@@ -10,6 +10,7 @@ use std::convert::TryInto;
+ use std::io;
+ use std::io::BufRead;
+ use std::str::FromStr;
++use std::time::Duration;
+ use std::time::SystemTime;
+ 
+ use anyhow::{Context, Result};
+@@ -174,6 +175,7 @@ pub(crate) fn make_ca_cert(
+ pub(crate) fn make_user_cert(
+     emails: &[&str],
+     name: Option<&str>,
++    validity_days: Option<u64>,
+     password: bool,
+     password_file: Option<String>,
+     cipher_suite: Option<CipherSuite>,
+@@ -231,6 +233,10 @@ pub(crate) fn make_user_cert(
+         builder = builder.set_password(Some(pass.to_owned().into()));
+     }
+ 
++    if let Some(validity_days) = &validity_days {
++        builder = builder.set_validity_period(Duration::from_secs(validity_days * SECONDS_IN_DAY));
++    }
++
+     for email in emails {
+         builder = builder.add_userid(user_id(email, name));
+     }
+-- 
+2.46.0
+

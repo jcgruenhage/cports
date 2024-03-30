@@ -1,6 +1,6 @@
 pkgname = "openpgp-ca"
 pkgver = "0.14.0"
-pkgrel = 0
+pkgrel = 1
 build_wrksrc = "openpgp-ca-bin"
 build_style = "cargo"
 hostmakedepends = ["cargo-auditable", "pkgconf"]
