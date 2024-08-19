@@ -12,6 +12,7 @@ hostmakedepends = [
     "automake",
     "libtool",
     "pkgconf",
+    "protobuf-c-devel",
 ]
 makedepends = [
     "fstrm-devel",
