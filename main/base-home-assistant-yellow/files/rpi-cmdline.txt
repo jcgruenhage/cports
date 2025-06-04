@@ -1,0 +1,1 @@
+root=LABEL=root ro rootwait console=ttyAMA2,115200 dwc_otg.lpm_enable=0 quiet splash

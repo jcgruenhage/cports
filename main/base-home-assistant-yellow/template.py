@@ -1,0 +1,24 @@
+pkgname = "base-home-assistant-yellow"
+pkgver = "0.1"
+pkgrel = 0
+archs = ["aarch64"]
+depends = ["rpi-boot", "firmware-linux-brcm-rpi"]
+pkgdesc = "Chimera base package for Home Assistant Yellow"
+license = "custom:none"
+url = "https://chimera-linux.org"
+
+
+def install(self):
+    # config
+    self.install_file(self.files_path / "agetty", "etc/default")
+    self.install_file(self.files_path / "rpi-cmdline.txt", "etc/default")
+    self.install_file(self.files_path / "rpi-config.txt", "etc/default")
+    self.install_tmpfiles(self.files_path / "rpi.conf", name="rpi")
+
+    self.install_file(
+        self.files_path / "71-raspberrypi.rules", "usr/lib/udev/rules.d"
+    )
+    # kernel hook
+    self.install_file(
+        self.files_path / "99-rpi-kernel.sh", "usr/lib/kernel.d", mode=0o755
+    )
