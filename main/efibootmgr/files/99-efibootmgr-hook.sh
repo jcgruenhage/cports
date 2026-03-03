@@ -13,6 +13,8 @@ EFIBOOTMGR_ENTRY_TITLE="Chimera Linux"
 
 DEV_CMDLINE=$EFIBOOTMGR_CMDLINE
 DEV_CMDLINE_DEFAULT=$EFIBOOTMGR_CMDLINE_DEFAULT
+DEV_EXTRA_CMDLINE=
+export DEV_CMDLINE DEV_CMDLINE_DEFAULT DEV_EXTRA_CMDLINE
 
 # silently quit if disabled
 if [ -z "$EFIBOOTMGR_ENABLE_HOOK" ]; then
@@ -24,46 +26,18 @@ if [ ! -x "/usr/bin/efibootmgr" ]; then
     exit 1
 fi
 
-# /boot must be a mountpoint
-BDEV=$(mountpoint -d /boot 2>/dev/null)
-if [ $? -ne 0 ]; then
-    echo "ERROR: /boot is not a mount point" 1>&2
+# /boot must be an ESP
+if ! /usr/lib/base-kernel/esp-validate /boot; then
+    echo "ERROR: /boot is not an ESP" 1>&2
     exit 1
 fi
 
-# map this back to block device
-DEVNAME=
-. /sys/dev/block/$BDEV/uevent
+set -- $(/usr/lib/efibootmgr/esp-disk-part /boot)
+DISKBLOCK=$1
+PARTNUM=$2
 
-if [ -z "$DEVNAME" -o -z "$MAJOR" -o -z "$MINOR" -o -z "$PARTN" ]; then
+if [ -z "$DISKBLOCK" -o -z "$PARTNUM" ]; then
     echo "ERROR: could not get /boot device" 1>&2
-    exit 1
-fi
-
-PARTBLOCK="/dev/$DEVNAME"
-PARTTYPE=$(lsblk -n -o PARTTYPE "$PARTBLOCK" 2>/dev/null)
-
-if [ $? -ne 0 ]; then
-    echo "ERROR: could not get /boot partition type" 1>&2
-    exit 1
-fi
-
-PARTTYPE=$(echo "$PARTTYPE" | tr '[:upper:]' '[:lower:]')
-
-if [ "$PARTTYPE" != "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" ]; then
-    echo "ERROR: /boot is not an EFI system partition" 1>&2
-    exit 1
-fi
-
-# partition number of disk
-PARTNUM="$PARTN"
-
-# identify the disk itself
-DISKBLOCK="/dev/${DEVNAME%$PARTNUM}"
-DISKBLOCK="${DISKBLOCK%p}"
-
-if [ ! -b "$DISKBLOCK" ]; then
-    echo "ERROR: could not locate disk for $PARTBLOCK" 1>&2
     exit 1
 fi
 
@@ -113,25 +87,11 @@ add_entry() {
         INITRD="initrd=\\$INITRD"
     fi
 
-    CMDLINE="$DEV_CMDLINE"
-    CMDLINE_DEFAULT="$DEV_CMDLINE_DEFAULT"
-    [ -n "$CMDLINE" ] && CMDLINE=" $CMDLINE"
-    [ -n "$CMDLINE_DEFAULT" ] && CMDLINE_DEFAULT=" $CMDLINE_DEFAULT"
-
-    CMDLINE_FULL="ro${CMDLINE}${CMDLINE_DEFAULT}"
-    CMDLINE="ro single${CMDLINE}"
-
-    if [ -n "$INITRD" ]; then
-        CMDLINE="$CMDLINE $INITRD"
-        CMDLINE_FULL="$CMDLINE_FULL $INITRD"
-    fi
-
-    CMDLINE_FULL=$(/usr/lib/base-kernel/kernel-root-detect "$CMDLINE_FULL")
-    add_entry_raw "$1" "" "$VMLINUX" "$CMDLINE_FULL"
+    add_entry_raw "$1" "" "$VMLINUX" "$(/usr/lib/base-kernel/kernel-cmdline 1 "$INITRD")"
 
     if [ -z "$EFIBOOTMGR_DISABLE_RECOVERY" ]; then
-        CMDLINE=$(/usr/lib/base-kernel/kernel-root-detect "$CMDLINE")
-        add_entry_raw "$1" ", recovery" "$VMLINUX" "$CMDLINE"
+        add_entry_raw "$1" ", recovery" "$VMLINUX" \
+            "$(/usr/lib/base-kernel/kernel-cmdline "" "$INITRD")"
     fi
 }
 

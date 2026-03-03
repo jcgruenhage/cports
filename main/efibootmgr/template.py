@@ -1,6 +1,6 @@
 pkgname = "efibootmgr"
 pkgver = "18"
-pkgrel = 3
+pkgrel = 4
 build_style = "makefile"
 hostmakedepends = ["pkgconf"]
 makedepends = ["efivar-devel", "popt-devel", "linux-headers"]
@@ -52,5 +52,11 @@ def install(self):
     self.install_file(
         self.files_path / "99-efibootmgr-hook.sh",
         "usr/lib/kernel.d",
+        mode=0o755,
+    )
+    # helper for resolving disk an partition number from mountpoint
+    self.install_file(
+        self.files_path / "esp-disk-part",
+        "usr/lib/efibootmgr",
         mode=0o755,
     )

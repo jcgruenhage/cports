@@ -1,5 +1,5 @@
 pkgname = "rsop"
-pkgver = "0.10.0"
+pkgver = "0.11.0"
 pkgrel = 0
 build_wrksrc = "rsop"
 build_style = "cargo"
@@ -10,7 +10,7 @@ pkgdesc = "Stateless OpenPGP CLI tool backed by rpgp"
 license = "MIT OR Apache-2.0"
 url = "https://codeberg.org/heiko/rsop"
 source = f"{url}/archive/rsop/v{pkgver}.tar.gz"
-sha256 = "f79b119ac2d88b84301de3e248656153dbed4a5ab9478e0b456d874b64a8eed5"
+sha256 = "d3fe9a5a8b160cdce3b1f57e158389a16c56fa2347ee2b6ba8dc19de81e4158b"
 
 
 def post_install(self):

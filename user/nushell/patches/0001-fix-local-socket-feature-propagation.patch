@@ -1,0 +1,36 @@
+From 71fe6bfb22b579919fd9d4ddf3f447b9a4780500 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?JC=20Gr=C3=BCnhage?= <jan.christian@gruenhage.xyz>
+Date: Tue, 7 Jul 2026 13:20:23 +0200
+Subject: [PATCH] fix local-socket feature propagation
+
+---
+ Cargo.toml | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 350d348fa..f02434ba3 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -320,7 +320,7 @@ nu-explore = { workspace = true }
+ nu-lsp = { workspace = true, optional = true }
+ nu-parser = { workspace = true }
+ nu-path = { workspace = true }
+-nu-plugin-engine = { workspace = true, features = ["local-socket"], optional = true }
++nu-plugin-engine = { workspace = true, optional = true }
+ nu-protocol = { workspace = true, features = ["os"] }
+ nu-std = { workspace = true }
+ nu-system = { workspace = true }
+@@ -407,7 +407,10 @@ network = ["nu-command/network"]
+ native-tls = ["nu-command/native-tls"]
+ rustls-tls = ["nu-command/rustls-tls"]
+ 
++local-socket = ["nu-plugin-engine?/local-socket"]
++
+ default = [
++  "local-socket",
+   "lsp",
+   "mcp",
+   "network",
+-- 
+2.52.0
+

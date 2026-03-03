@@ -1,0 +1,64 @@
+From f599be07e37387d298473d73da97ab31e07cca7a Mon Sep 17 00:00:00 2001
+From: triallax <triallax@tutanota.com>
+Date: Wed, 20 May 2026 23:55:21 +0200
+Subject: [PATCH] no jemalloc
+
+---
+ Cargo.toml                |  1 -
+ crates/zizmor/Cargo.toml  |  3 ---
+ crates/zizmor/src/main.rs | 13 -------------
+ 3 files changed, 17 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index cdf4b17..3972679 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -79,7 +79,6 @@ tree-sitter-bash = "0.25.1"
+ # See: https://github.com/zizmorcore/zizmor/pull/1427
+ tree-sitter-powershell = "=0.26.4"
+ tree-sitter-yaml = "0.7.2"
+-tikv-jemallocator = "0.7"
+ typomania = { version = "0.1.2", default-features = false }
+ 
+ [workspace.lints.rust]
+diff --git a/crates/zizmor/Cargo.toml b/crates/zizmor/Cargo.toml
+index a8898da..275bf2b 100644
+--- a/crates/zizmor/Cargo.toml
++++ b/crates/zizmor/Cargo.toml
+@@ -80,9 +80,6 @@ yamlpath.workspace = true
+ yamlpatch.workspace = true
+ zizmor-sarif.workspace = true
+ 
+-[target.'cfg(not(any(target_family = "windows", target_os = "openbsd")))'.dependencies]
+-tikv-jemallocator.workspace = true
+-
+ [build-dependencies]
+ csv.workspace = true
+ fst.workspace = true
+diff --git a/crates/zizmor/src/main.rs b/crates/zizmor/src/main.rs
+index d7fbfac..0deaf79 100644
+--- a/crates/zizmor/src/main.rs
++++ b/crates/zizmor/src/main.rs
+@@ -56,19 +56,6 @@ mod registry;
+ mod state;
+ mod utils;
+ 
+-#[cfg(all(
+-    not(target_family = "windows"),
+-    not(target_os = "openbsd"),
+-    any(
+-        target_arch = "x86_64",
+-        target_arch = "aarch64",
+-        // NOTE(ww): Not a build we currently support.
+-        // target_arch = "powerpc64"
+-    )
+-))]
+-#[global_allocator]
+-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+-
+ // TODO: Dedupe this with the top-level `sponsors.json` used by the
+ // README + docs site.
+ const THANKS: &[(&str, &str)] = &[
+-- 
+2.52.0
+

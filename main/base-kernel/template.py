@@ -1,6 +1,6 @@
 pkgname = "base-kernel"
 pkgver = "0.2"
-pkgrel = 18
+pkgrel = 19
 depends = [
     "cmd:findmnt!util-linux-mount",
     "kmod",
@@ -24,6 +24,8 @@ options = ["!check"]
 
 def install(self):
     for f in [
+        "esp-validate",
+        "kernel-cmdline",
         "kernel-root-detect",
         "run-kernel-d",
     ]:

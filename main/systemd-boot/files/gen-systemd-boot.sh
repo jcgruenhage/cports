@@ -37,6 +37,7 @@ DEV_CMDLINE=$SD_BOOT_CMDLINE
 DEV_CMDLINE_DEFAULT=$SD_BOOT_CMDLINE_DEFAULT
 DEV_EXTRA_CMDLINE=
 DEV_DEVICETREE=$SD_BOOT_DEVICETREE
+export DEV_CMDLINE DEV_CMDLINE_DEFAULT DEV_EXTRA_CMDLINE
 
 if [ -r "$SD_BOOT_CMDLINE_FILE" ]; then
     DEV_EXTRA_CMDLINE=$(cat "$SD_BOOT_CMDLINE_FILE")
@@ -108,20 +109,15 @@ fi
 
 if [ "$SYSTEMD_RELAX_ESP_CHECKS" != "1" ]; then
     # make sure ESP is really an ESP
-    ESP_PTTYPE=$(lsblk -no PARTTYPE "$ESP_DEV")
-
-    if [ "$ESP_PTTYPE" != "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" ]; then
-        echo "The ESP is not an ESP." >&2
-        exit 4
-    fi
-
-    # make sure ESP is FAT32
-    ESP_FSTYPE=$(lsblk -no FSTYPE "$ESP_DEV")
-
-    if [ "$ESP_FSTYPE" != "vfat" ]; then
-        echo "The ESP is not FAT32." >&2
-        exit 5
-    fi
+    /usr/lib/base-kernel/esp-validate "$SD_BOOT_ESP_PATH"
+    case $? in
+        0) ;;
+        2) echo "Could not determine the ESP source device." >&2; exit 8 ;;
+        3) echo "The ESP source is not a block device." >&2; exit 9 ;;
+        4) echo "The ESP is not FAT32." >&2; exit 5 ;;
+        5) echo "The ESP is not an ESP." >&2; exit 4 ;;
+        *) echo "The ESP is not valid." >&2; exit 7 ;;
+    esac
 fi
 
 # /boot must be XBOOTLDR when separate
@@ -157,30 +153,8 @@ write_devicetree() {
     esac
 }
 
-build_cmdline() {
-    if [ -z "$1" ]; then
-        printf "ro single "
-    else
-        printf "ro "
-    fi
-    if [ -n "$DEV_EXTRA_CMDLINE" ]; then
-        printf "%s " "$DEV_EXTRA_CMDLINE"
-    fi
-    if [ -n "$DEV_CMDLINE" ]; then
-        printf "%s " "$DEV_CMDLINE"
-    fi
-    if [ -n "$1" -a -n "$DEV_CMDLINE_DEFAULT" ]; then
-        printf "%s " "$DEV_CMDLINE_DEFAULT"
-    fi
-}
-
-gen_cmdline() {
-    CMDL=$(build_cmdline "$@" | sed 's/[ ]*$//')
-    /usr/lib/base-kernel/kernel-root-detect "$CMDL"
-}
-
-CMDLINE_MULTI=$(gen_cmdline 1)
-CMDLINE_SINGLE=$(gen_cmdline)
+CMDLINE_MULTI=$(/usr/lib/base-kernel/kernel-cmdline 1)
+CMDLINE_SINGLE=$(/usr/lib/base-kernel/kernel-cmdline)
 
 echo "Generating boot entries for ${SD_BOOT_ENTRY_TOKEN}..."
 

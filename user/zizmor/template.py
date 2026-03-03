@@ -1,8 +1,13 @@
 pkgname = "zizmor"
-pkgver = "1.16.0"
+pkgver = "1.26.1"
 pkgrel = 0
 build_style = "cargo"
 prepare_after_patch = True
+make_check_args = [
+    "--",
+    # asserted output assumes a git checkout, run from extracted tarball fails
+    "--skip=issue_1745",
+]
 hostmakedepends = ["cargo-auditable"]
 makedepends = ["rust-std"]
 pkgdesc = "Static analysis for GitHub Actions"
@@ -11,7 +16,7 @@ url = "https://docs.zizmor.sh"
 source = (
     f"https://github.com/zizmorcore/zizmor/archive/refs/tags/v{pkgver}.tar.gz"
 )
-sha256 = "8c0f9ef81c6d5b12d2c85a5ede787c8588ed40100f8e1826251934f18f5e0755"
+sha256 = "ec5540b3bd6d347df61dcd24ecd2eaffd3181808f4dafc59a9c889e26b075eb8"
 # Generates completions using host binaries
 options = ["!cross"]
 

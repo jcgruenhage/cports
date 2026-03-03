@@ -1,6 +1,6 @@
 pkgname = "u-boot-menu"
 pkgver = "0.1"
-pkgrel = 3
+pkgrel = 4
 depends = ["base-kernel"]
 pkgdesc = "Common U-Boot boot menu generator for device targets"
 license = "custom:meta"

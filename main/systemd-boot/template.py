@@ -1,6 +1,6 @@
 pkgname = "systemd-boot"
 pkgver = "256.11"
-pkgrel = 5
+pkgrel = 6
 archs = ["aarch64", "loongarch64", "riscv64", "x86_64"]
 build_style = "meson"
 configure_args = [
@@ -125,7 +125,7 @@ makedepends = [
     "util-linux-blkid-devel",
     "util-linux-mount-devel",
 ]
-depends = [self.with_pkgver("systemd-boot-efi")]
+depends = ["base-kernel", self.with_pkgver("systemd-boot-efi")]
 checkdepends = ["xz", "perl"]
 pkgdesc = "UEFI boot manager"
 license = "LGPL-2.1-or-later"
