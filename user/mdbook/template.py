@@ -1,5 +1,5 @@
 pkgname = "mdbook"
-pkgver = "0.5.2"
+pkgver = "0.5.4"
 pkgrel = 0
 build_style = "cargo"
 hostmakedepends = ["cargo-auditable"]
@@ -10,7 +10,7 @@ url = "https://rust-lang.github.io/mdBook"
 source = (
     f"https://github.com/rust-lang/mdBook/archive/refs/tags/v{pkgver}.tar.gz"
 )
-sha256 = "2c8615a17c5670f9aa6d8dbf77c343cf430f95f571f28a87bb7aaa8f29c1ac5b"
+sha256 = "107614330c35c77d53b6f6ce7826c50eed087650efe5646a4d0a16ca6bf5544b"
 # Generates completions using host binary
 options = ["!cross"]
 
