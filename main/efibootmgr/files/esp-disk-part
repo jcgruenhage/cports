@@ -1,0 +1,17 @@
+#!/bin/sh
+# print the backing disk and partition number of a mountpoint, as "DISK PARTNO"
+# (e.g. "/dev/nvme0n1 1"), for use with efibootmgr -d/-p
+#
+# usage: esp-disk-part <mountpoint>
+
+[ -n "$1" ] || exit 1
+
+DEV=$(findmnt -no SOURCE "$1") || exit 1
+[ -b "$DEV" ] || exit 1
+
+DISKBASE=$(lsblk -no PKNAME "$DEV" 2>/dev/null)
+PARTNO=$(cat "/sys/class/block/$(basename "$DEV")/partition" 2>/dev/null)
+
+[ -n "$DISKBASE" ] && [ -n "$PARTNO" ] || exit 1
+
+echo "/dev/$DISKBASE $PARTNO"

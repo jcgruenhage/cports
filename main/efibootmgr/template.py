@@ -54,3 +54,9 @@ def install(self):
         "usr/lib/kernel.d",
         mode=0o755,
     )
+    # helper for resolving disk an partition number from mountpoint
+    self.install_file(
+        self.files_path / "esp-disk-part",
+        "usr/lib/efibootmgr",
+        mode=0o755,
+    )

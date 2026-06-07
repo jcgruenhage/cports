@@ -30,28 +30,12 @@ if ! /usr/lib/base-kernel/esp-validate /boot; then
     exit 1
 fi
 
-BDEV=$(mountpoint -d /boot 2>/dev/null)
+set -- $(/usr/lib/efibootmgr/esp-disk-part /boot)
+DISKBLOCK=$1
+PARTNUM=$2
 
-# map this back to block device
-DEVNAME=
-. /sys/dev/block/$BDEV/uevent
-
-if [ -z "$DEVNAME" -o -z "$MAJOR" -o -z "$MINOR" -o -z "$PARTN" ]; then
+if [ -z "$DISKBLOCK" -o -z "$PARTNUM" ]; then
     echo "ERROR: could not get /boot device" 1>&2
-    exit 1
-fi
-
-PARTBLOCK="/dev/$DEVNAME"
-
-# partition number of disk
-PARTNUM="$PARTN"
-
-# identify the disk itself
-DISKBLOCK="/dev/${DEVNAME%$PARTNUM}"
-DISKBLOCK="${DISKBLOCK%p}"
-
-if [ ! -b "$DISKBLOCK" ]; then
-    echo "ERROR: could not locate disk for $PARTBLOCK" 1>&2
     exit 1
 fi
 
