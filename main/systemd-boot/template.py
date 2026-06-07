@@ -125,7 +125,7 @@ makedepends = [
     "util-linux-blkid-devel",
     "util-linux-mount-devel",
 ]
-depends = [self.with_pkgver("systemd-boot-efi")]
+depends = ["base-kernel", self.with_pkgver("systemd-boot-efi")]
 checkdepends = ["xz", "perl"]
 pkgdesc = "UEFI boot manager"
 license = "LGPL-2.1-or-later"

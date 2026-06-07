@@ -1,0 +1,21 @@
+#!/bin/sh
+# validate that a mountpoint is a mounted FAT EFI System Partition
+#
+# usage: esp-validate <mountpoint>
+#   exit 0 = valid ESP
+#        1 = not a mount point
+#        2 = no source device
+#        3 = source not a block device
+#        4 = not FAT
+#        5 = wrong partition type
+
+ESP_GUID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+[ -n "$1" ] || exit 1
+
+mountpoint -q "$1" || exit 1
+DEV=$(findmnt -no SOURCE "$1") || exit 2
+[ -b "$DEV" ] || exit 3
+[ "$(lsblk -no FSTYPE "$DEV")" = "vfat" ] || exit 4
+[ "$(lsblk -no PARTTYPE "$DEV" | tr '[:upper:]' '[:lower:]')" = "$ESP_GUID" ] || exit 5
+exit 0

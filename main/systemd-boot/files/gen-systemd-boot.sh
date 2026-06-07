@@ -108,20 +108,15 @@ fi
 
 if [ "$SYSTEMD_RELAX_ESP_CHECKS" != "1" ]; then
     # make sure ESP is really an ESP
-    ESP_PTTYPE=$(lsblk -no PARTTYPE "$ESP_DEV")
-
-    if [ "$ESP_PTTYPE" != "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" ]; then
-        echo "The ESP is not an ESP." >&2
-        exit 4
-    fi
-
-    # make sure ESP is FAT32
-    ESP_FSTYPE=$(lsblk -no FSTYPE "$ESP_DEV")
-
-    if [ "$ESP_FSTYPE" != "vfat" ]; then
-        echo "The ESP is not FAT32." >&2
-        exit 5
-    fi
+    /usr/lib/base-kernel/esp-validate "$SD_BOOT_ESP_PATH"
+    case $? in
+        0) ;;
+        2) echo "Could not determine the ESP source device." >&2; exit 8 ;;
+        3) echo "The ESP source is not a block device." >&2; exit 9 ;;
+        4) echo "The ESP is not FAT32." >&2; exit 5 ;;
+        5) echo "The ESP is not an ESP." >&2; exit 4 ;;
+        *) echo "The ESP is not valid." >&2; exit 7 ;;
+    esac
 fi
 
 # /boot must be XBOOTLDR when separate

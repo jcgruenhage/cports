@@ -24,6 +24,7 @@ options = ["!check"]
 
 def install(self):
     for f in [
+        "esp-validate",
         "kernel-root-detect",
         "run-kernel-d",
     ]:

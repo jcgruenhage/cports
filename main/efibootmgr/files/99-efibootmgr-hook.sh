@@ -24,12 +24,13 @@ if [ ! -x "/usr/bin/efibootmgr" ]; then
     exit 1
 fi
 
-# /boot must be a mountpoint
-BDEV=$(mountpoint -d /boot 2>/dev/null)
-if [ $? -ne 0 ]; then
-    echo "ERROR: /boot is not a mount point" 1>&2
+# /boot must be an ESP
+if ! /usr/lib/base-kernel/esp-validate /boot; then
+    echo "ERROR: /boot is not an ESP" 1>&2
     exit 1
 fi
+
+BDEV=$(mountpoint -d /boot 2>/dev/null)
 
 # map this back to block device
 DEVNAME=
@@ -41,19 +42,6 @@ if [ -z "$DEVNAME" -o -z "$MAJOR" -o -z "$MINOR" -o -z "$PARTN" ]; then
 fi
 
 PARTBLOCK="/dev/$DEVNAME"
-PARTTYPE=$(lsblk -n -o PARTTYPE "$PARTBLOCK" 2>/dev/null)
-
-if [ $? -ne 0 ]; then
-    echo "ERROR: could not get /boot partition type" 1>&2
-    exit 1
-fi
-
-PARTTYPE=$(echo "$PARTTYPE" | tr '[:upper:]' '[:lower:]')
-
-if [ "$PARTTYPE" != "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" ]; then
-    echo "ERROR: /boot is not an EFI system partition" 1>&2
-    exit 1
-fi
 
 # partition number of disk
 PARTNUM="$PARTN"
