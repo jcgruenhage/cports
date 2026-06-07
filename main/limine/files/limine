@@ -1,0 +1,62 @@
+# The configuration file for the Limine integration.
+# Commented out lines are just defaults.
+#
+# To override anything, create /etc/default/limine and put
+# your values there.
+#
+
+# Whether to disable the kernel hook. Normally it always runs and
+# refreshes the config when limine is the installed bootloader.
+#LIMINE_DISABLE_KERNEL_HOOK=
+
+# The path to write limine.conf to. By default the ESP is autodetected
+# (a FAT32 EFI System Partition mounted at /boot/efi, /boot or /efi) and
+# limine.conf is written to its root; BIOS systems fall back to
+# /boot/limine.conf.
+#LIMINE_CONFIG_PATH=
+
+# The ESP mount point to use, when autodetection is not desired. Used by
+# both the config generator and install-limine.
+#LIMINE_ESP_PATH=
+
+# The menu timeout in seconds.
+#LIMINE_TIMEOUT=5
+
+# If set, enable serial input/output in the menu.
+#LIMINE_SERIAL=
+
+# The additional cmdline to use always.
+LIMINE_CMDLINE=
+
+# The additional cmdline to use in normal (non-recovery) boot only.
+LIMINE_CMDLINE_DEFAULT="quiet splash"
+
+# The base kernel command line is otherwise read from /etc/default/limine-cmdline
+# (falling back to /usr/lib/limine/cmdline) if present.
+
+# The device tree blob, specified either as a relative path
+# (which expands to /boot/dtbs/dtbs-KERNVER/DEVICETREE) or an absolute path.
+# It may also be placed in /etc/default/limine-devicetree.
+LIMINE_DEVICETREE=
+
+# If set, dtb_path will not be emitted.
+#LIMINE_DISABLE_DEVICETREE=
+
+# If set, recovery mode entries will be disabled.
+#LIMINE_DISABLE_RECOVERY=
+
+# The OS name used in entries.
+# By default we use os-release ($PRETTY_NAME).
+#LIMINE_OS_TITLE="Chimera Linux"
+
+#
+# The following are used by install-limine.
+#
+
+# The firmware boot entry label to register.
+#LIMINE_LABEL="Limine"
+
+# If set, install to the removable EFI/BOOT path and register no firmware
+# boot entry (otherwise an entry is registered, with the removable path used
+# as an automatic fallback when the firmware entry cannot be written).
+#LIMINE_REMOVABLE=

@@ -1,11 +1,12 @@
 pkgname = "limine"
 pkgver = "12.3.3"
-pkgrel = 0
+pkgrel = 1
 # these targets implemented
 archs = ["aarch64", "loongarch64", "riscv64", "x86_64"]
 build_style = "gnu_configure"
 configure_args = ["--enable-all"]
 hostmakedepends = ["automake", "mtools", "nasm"]
+depends = ["base-kernel", "efibootmgr"]
 pkgdesc = "Multiprotocol EFI bootloader"
 license = "BSD-2-Clause AND 0BSD"
 url = "https://limine-bootloader.org"
@@ -18,3 +19,15 @@ options = ["!check"]
 def post_install(self):
     self.uninstall(f"usr/share/doc/{pkgname}/COPYING")
     self.install_license("COPYING")
+    # config generator
+    self.install_bin(self.files_path / "gen-limine.sh", name="gen-limine")
+    # installer
+    self.install_bin(
+        self.files_path / "install-limine.sh", name="install-limine"
+    )
+    # conf file
+    self.install_file(self.files_path / "limine", "usr/lib/limine")
+    # kernel hook
+    self.install_file(
+        self.files_path / "99-gen-limine.sh", "usr/lib/kernel.d", mode=0o755
+    )
