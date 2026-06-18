@@ -1,0 +1,26 @@
+#!/bin/sh
+# assemble a kernel command line and resolve its root device
+#
+# with a non-empty first argument the default (multi-user) line is built,
+# without it the single-user (recovery) line. a non-empty second argument is
+# placed verbatim ahead of the options (e.g. an extlinux "initrd=" token).
+#
+# the options are read from the environment, like kernel-root-detect:
+#   DEV_EXTRA_CMDLINE    site options from the *-cmdline file
+#   DEV_CMDLINE          configured options
+#   DEV_CMDLINE_DEFAULT  options for the default line only
+
+build() {
+    [ -n "$2" ] && printf "%s " "$2"
+    if [ -z "$1" ]; then
+        printf "ro single "
+    else
+        printf "ro "
+    fi
+    [ -n "$DEV_EXTRA_CMDLINE" ] && printf "%s " "$DEV_EXTRA_CMDLINE"
+    [ -n "$DEV_CMDLINE" ] && printf "%s " "$DEV_CMDLINE"
+    [ -n "$1" ] && [ -n "$DEV_CMDLINE_DEFAULT" ] && printf "%s " "$DEV_CMDLINE_DEFAULT"
+}
+
+CMDL=$(build "$1" "$2" | sed 's/[ ]*$//')
+exec /usr/lib/base-kernel/kernel-root-detect "$CMDL"

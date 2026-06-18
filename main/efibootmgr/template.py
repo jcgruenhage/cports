@@ -1,6 +1,6 @@
 pkgname = "efibootmgr"
 pkgver = "18"
-pkgrel = 3
+pkgrel = 4
 build_style = "makefile"
 hostmakedepends = ["pkgconf"]
 makedepends = ["efivar-devel", "popt-devel", "linux-headers"]

@@ -37,6 +37,7 @@ DEV_CMDLINE=$SD_BOOT_CMDLINE
 DEV_CMDLINE_DEFAULT=$SD_BOOT_CMDLINE_DEFAULT
 DEV_EXTRA_CMDLINE=
 DEV_DEVICETREE=$SD_BOOT_DEVICETREE
+export DEV_CMDLINE DEV_CMDLINE_DEFAULT DEV_EXTRA_CMDLINE
 
 if [ -r "$SD_BOOT_CMDLINE_FILE" ]; then
     DEV_EXTRA_CMDLINE=$(cat "$SD_BOOT_CMDLINE_FILE")
@@ -152,30 +153,8 @@ write_devicetree() {
     esac
 }
 
-build_cmdline() {
-    if [ -z "$1" ]; then
-        printf "ro single "
-    else
-        printf "ro "
-    fi
-    if [ -n "$DEV_EXTRA_CMDLINE" ]; then
-        printf "%s " "$DEV_EXTRA_CMDLINE"
-    fi
-    if [ -n "$DEV_CMDLINE" ]; then
-        printf "%s " "$DEV_CMDLINE"
-    fi
-    if [ -n "$1" -a -n "$DEV_CMDLINE_DEFAULT" ]; then
-        printf "%s " "$DEV_CMDLINE_DEFAULT"
-    fi
-}
-
-gen_cmdline() {
-    CMDL=$(build_cmdline "$@" | sed 's/[ ]*$//')
-    /usr/lib/base-kernel/kernel-root-detect "$CMDL"
-}
-
-CMDLINE_MULTI=$(gen_cmdline 1)
-CMDLINE_SINGLE=$(gen_cmdline)
+CMDLINE_MULTI=$(/usr/lib/base-kernel/kernel-cmdline 1)
+CMDLINE_SINGLE=$(/usr/lib/base-kernel/kernel-cmdline)
 
 echo "Generating boot entries for ${SD_BOOT_ENTRY_TOKEN}..."
 

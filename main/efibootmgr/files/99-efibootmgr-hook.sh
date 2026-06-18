@@ -13,6 +13,8 @@ EFIBOOTMGR_ENTRY_TITLE="Chimera Linux"
 
 DEV_CMDLINE=$EFIBOOTMGR_CMDLINE
 DEV_CMDLINE_DEFAULT=$EFIBOOTMGR_CMDLINE_DEFAULT
+DEV_EXTRA_CMDLINE=
+export DEV_CMDLINE DEV_CMDLINE_DEFAULT DEV_EXTRA_CMDLINE
 
 # silently quit if disabled
 if [ -z "$EFIBOOTMGR_ENABLE_HOOK" ]; then
@@ -85,25 +87,11 @@ add_entry() {
         INITRD="initrd=\\$INITRD"
     fi
 
-    CMDLINE="$DEV_CMDLINE"
-    CMDLINE_DEFAULT="$DEV_CMDLINE_DEFAULT"
-    [ -n "$CMDLINE" ] && CMDLINE=" $CMDLINE"
-    [ -n "$CMDLINE_DEFAULT" ] && CMDLINE_DEFAULT=" $CMDLINE_DEFAULT"
-
-    CMDLINE_FULL="ro${CMDLINE}${CMDLINE_DEFAULT}"
-    CMDLINE="ro single${CMDLINE}"
-
-    if [ -n "$INITRD" ]; then
-        CMDLINE="$CMDLINE $INITRD"
-        CMDLINE_FULL="$CMDLINE_FULL $INITRD"
-    fi
-
-    CMDLINE_FULL=$(/usr/lib/base-kernel/kernel-root-detect "$CMDLINE_FULL")
-    add_entry_raw "$1" "" "$VMLINUX" "$CMDLINE_FULL"
+    add_entry_raw "$1" "" "$VMLINUX" "$(/usr/lib/base-kernel/kernel-cmdline 1 "$INITRD")"
 
     if [ -z "$EFIBOOTMGR_DISABLE_RECOVERY" ]; then
-        CMDLINE=$(/usr/lib/base-kernel/kernel-root-detect "$CMDLINE")
-        add_entry_raw "$1" ", recovery" "$VMLINUX" "$CMDLINE"
+        add_entry_raw "$1" ", recovery" "$VMLINUX" \
+            "$(/usr/lib/base-kernel/kernel-cmdline "" "$INITRD")"
     fi
 }
 

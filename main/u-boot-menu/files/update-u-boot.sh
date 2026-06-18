@@ -30,6 +30,7 @@ DEV_CMDLINE_DEFAULT=$U_BOOT_CMDLINE_DEFAULT
 DEV_EXTRA_CMDLINE=
 DEV_FDT=$U_BOOT_FDT
 DEV_FDTDIR=$U_BOOT_FDTDIR
+export DEV_CMDLINE DEV_CMDLINE_DEFAULT DEV_EXTRA_CMDLINE
 
 if [ -r "$U_BOOT_CMDLINE_FILE" ]; then
     DEV_EXTRA_CMDLINE=$(cat "$U_BOOT_CMDLINE_FILE")
@@ -96,29 +97,12 @@ write_fdt() {
     esac
 }
 
-build_cmdline() {
-    if [ -f "/boot/initrd.img-$1" ]; then
-        printf "initrd=../initrd.img-%s " "$1"
-    fi
-    if [ -z "$2" ]; then
-        printf "ro single "
-    else
-        printf "ro "
-    fi
-    if [ -n "$DEV_EXTRA_CMDLINE" ]; then
-        printf "%s " "$DEV_EXTRA_CMDLINE"
-    fi
-    if [ -n "$DEV_CMDLINE" ]; then
-        printf "%s " "$DEV_CMDLINE"
-    fi
-    if [ -n "$2" -a -n "$DEV_CMDLINE_DEFAULT" ]; then
-        printf "%s " "$DEV_CMDLINE_DEFAULT"
-    fi
-}
-
 gen_cmdline() {
-    CMDL=$(build_cmdline "$@" | sed 's/[ ]*$//')
-    /usr/lib/base-kernel/kernel-root-detect "$CMDL"
+    # $1 = kernel version, $2 = default flag; extlinux wants the initrd as a
+    # cmdline token, so pass it as the prefix
+    INITRD=
+    [ -f "/boot/initrd.img-$1" ] && INITRD="initrd=../initrd.img-$1"
+    /usr/lib/base-kernel/kernel-cmdline "$2" "$INITRD"
 }
 
 write_cfg "TIMEOUT $U_BOOT_TIMEOUT"
